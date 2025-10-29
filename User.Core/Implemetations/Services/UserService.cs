@@ -25,22 +25,19 @@ public class UserService : IUserService
 
     public async Task<List<UserDescriptionResponse>> Get(string email)
     {
-        var result = await _userRepository.GetAll().FirstOrDefaultAsync(x => x.Email == email);
-        
-        // Если поле Email не пустое, то ищет пользователя по полю Email
-        if (email != null)
+        // Проверка входных данных
+        if (string.IsNullOrWhiteSpace(email))
         {
-            // Если Email не найдет, выбрасывает исключение
-            if (result is null)
-            {
-                throw new UserException("Пользователь с таким Email не найден. Повторите попытку или зарегистрируйтесь.");
-            }
+            throw new ArgumentException("Email не может быть пустым.", nameof(email));
         }
         
-        // Если ничего не нашло, выбрасывает исключение
-        if (email == null)
+        // Поиск пользователя по Email
+        var result = await _userRepository.GetAll().FirstOrDefaultAsync(x => x.Email == email);
+        
+        // Если Email не найден, выбрасывает исключение
+        if (result is null)
         {
-            throw new UserException("Результат не найден. Попробуйте зарегистрироваться.");
+            throw new UserException("Пользователь с таким Email не найден. Повторите попытку или зарегистрируйтесь.");
         }
         
         // Возвращает пользователя в виде списка из одного элемента через маппинг

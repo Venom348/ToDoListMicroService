@@ -1,16 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace User.Persistence;
+namespace Task.Persistence;
 
 /// <summary>
-///     Модель для подключения к БД (User)
+///     Модель для подключения к БД (Task)
 /// </summary>
 public class ApplicationContext : DbContext
 {
     // Определение сущности
-    public DbSet<ToDoList.Contracts.Entities.User> Users => Set<ToDoList.Contracts.Entities.User>();
+    public DbSet<ToDoList.Contracts.Entities.Task> Tasks => Set<ToDoList.Contracts.Entities.Task>();
 
-    public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
+    public ApplicationContext(DbContextOptions<ApplicationContext> options): base(options)
     {
         // Проверяет, существует ли БД
         // Если нет, то создаёт её

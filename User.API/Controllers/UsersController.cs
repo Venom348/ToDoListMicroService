@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using ToDoList.Contracts.Requests.User;
 using User.Core.Abstractions.Services;
 using User.Core.Exceptions;
@@ -10,13 +11,15 @@ namespace User.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/users")]
-public class UsersController : Controller
+public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IValidator<PostUserRequest> _userValidator;
 
-    public UsersController(IUserService userService)
+    public UsersController(IUserService userService, IValidator<PostUserRequest> userValidator)
     {
         _userService = userService;
+        _userValidator = userValidator;
     }
 
     [HttpGet]

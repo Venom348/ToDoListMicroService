@@ -1,13 +1,12 @@
-using Microsoft.EntityFrameworkCore;
-using User.Core.Abstractions.Repositories;
-using User.Core.Abstractions.Services;
-using User.Core.Implemetations.Services;
-using User.Core.Mapping;
-using User.Persistence;
-using User.Persistence.Repositories;
 using FluentValidation;
-using ToDoList.Contracts.Requests.User;
-using User.Core.Validations;
+using Microsoft.EntityFrameworkCore;
+using Task.Core.Abstractions.Repositories;
+using Task.Core.Abstractions.Services;
+using Task.Core.Implementations.Services;
+using Task.Core.Mapping;
+using Task.Core.Validations;
+using Task.Persistence;
+using Task.Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration; // Получение доступа к конфигурации
@@ -15,13 +14,14 @@ var configuration = builder.Configuration; // Получение доступа 
 builder.Services.AddControllers(); // Регистрирует сервисы для работы с контроллерами
 builder.Services.AddSwaggerGen(); // Генерация документации Swagger
 
-builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddValidatorsFromAssembly(typeof(PostTaskRequestValidator).Assembly); // Регистрируем Validator
+
+builder.Services.AddTransient<ITaskService, TaskService>();
 builder.Services.AddDbContext<ApplicationContext>(opt => opt.UseNpgsql(configuration.GetConnectionString("Psql")));
-builder.Services.AddTransient<IBaseRepository<ToDoList.Contracts.Entities.User>, UserRepository>();
-builder.Services.AddScoped<IValidator<PostUserRequest>, PostUserRequestValidator>(); 
+builder.Services.AddTransient<IBaseRepository<ToDoList.Contracts.Entities.Task>, TaskRepository>();
 
 // Добавление профиля для автомаппера
-builder.Services.AddAutoMapper(opt => opt.AddProfile<UserProfile>());
+builder.Services.AddAutoMapper(opt => opt.AddProfile<TaskProfile>());
 
 var app = builder.Build();
 

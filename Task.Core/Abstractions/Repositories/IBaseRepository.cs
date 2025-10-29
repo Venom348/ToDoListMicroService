@@ -1,6 +1,6 @@
 ﻿using ToDoList.Contracts.Common;
 
-namespace User.Core.Abstractions.Repositories;
+namespace Task.Core.Abstractions.Repositories;
 
 /// <summary>
 ///     Базовый интерфейс для взаимодействия с сущностями в БД
@@ -19,20 +19,27 @@ public interface IBaseRepository<TEntity> where TEntity : Entity
     Task<TEntity> GetById(Guid id);
     
     /// <summary>
+    ///     Создаём сущность
+    /// </summary>
+    /// <param name="entity">Сущность</param>
+    Task<TEntity> Create(TEntity entity);
+    
+    /// <summary>
     ///     Обновляем сущность
     /// </summary>
     /// <param name="entity">Сущность</param>
+    /// <returns></returns>
     Task<TEntity> Update(TEntity entity);
     
     /// <summary>
     ///     Удаляем сущность
     /// </summary>
     /// <param name="entity">Сущность</param>
+    /// <returns></returns>
     Task<TEntity> Delete(TEntity entity);
     
     /// <summary>
     ///     Асинхронный вспомогательный метод сохранения
     /// </summary>
-    /// <returns></returns>
     Task<int> SaveChangesAsync();
 }
