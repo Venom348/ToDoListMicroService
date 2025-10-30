@@ -9,6 +9,7 @@
     <ItemGroup>
         <PackageReference Include="FluentValidation" Version="12.0.0" />
         <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.10"/>
         <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.6" />
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.6" />
@@ -16,8 +17,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\User.Core\User.Core.csproj" />
-      <ProjectReference Include="..\User.Persistence\User.Persistence.csproj" />
+      <ProjectReference Include="..\Auth.Core\Auth.Core.csproj" />
+      <ProjectReference Include="..\Auth.Persistence\Auth.Persistence.csproj" />
     </ItemGroup>
 
 </Project>
