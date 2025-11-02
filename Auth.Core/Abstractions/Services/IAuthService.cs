@@ -1,4 +1,5 @@
 ﻿using ToDoList.Contracts.Requests.Auth;
+using ToDoList.Contracts.Responses.Auth;
 
 namespace Auth.Core.Abstractions.Services;
 
@@ -19,5 +20,7 @@ public interface IAuthService
     /// </summary>
     /// <param name="request">Данные для авторизации пользователя</param>
     /// <returns></returns>
-    Task<string> Login(PostLoginRequest request);
+    Task<PostLoginResponse> Login(PostLoginRequest request);
+    Task<PostLoginResponse> RefreshToken(RefreshTokenRequest request, Guid id);
+    Task Logout(Guid id);
 }

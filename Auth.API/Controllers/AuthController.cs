@@ -1,7 +1,9 @@
-﻿using Auth.Core.Abstractions.Services;
+﻿using System.Security.Claims;
+using Auth.Core.Abstractions.Services;
 using Auth.Core.Exceptions;
 using Auth.Core.Validations;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Contracts.Requests.Auth;
 using ToDoList.Contracts.Requests.User;
@@ -43,15 +45,15 @@ public class AuthController : ControllerBase
         try
         {
             await _authService.Register(request);
-            return Ok();
+            return Ok(new { Message = "Регистрация прошла успешно!" });
         }
         catch (AuthException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { Error = ex.Message });
         }
         catch (Exception)
         {
-            return BadRequest("Неизвестная ошибка");
+            return StatusCode(500, new { Error = "Неизвестная ошибка" });
         }
     }
     
@@ -71,16 +73,63 @@ public class AuthController : ControllerBase
         
         try
         {
-            await _authService.Login(request);
-            return Ok();
+            var response = await _authService.Login(request);
+            return Ok(response);
         }
         catch (AuthException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { Error = ex.Message });
         }
         catch (Exception)
         {
-            return BadRequest("Неизвестная ошибка");
+            return StatusCode(500, new { Error = "Неизвестная ошибка" });
+        }
+    }
+
+    [HttpPost("RefreshToken")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { Error = "Недействительный токен" });
+            }
+            
+            var response = await _authService.RefreshToken(request, userId);
+            return Ok(response);
+        }
+        catch (AuthException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { Error = "Неизвестная ошибка" });
+        }
+    }
+
+    [Authorize]
+    [HttpPost("Logout")]
+    public async Task<IActionResult> Logout(Guid id)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { Error = "Недействительный токен" });
+            }
+
+            await _authService.Logout(userId);
+            return Ok(new { Message = "Выход выполнен успешно" });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { Error = "Неизвестная ошибка" });
         }
     }
 }

@@ -8,6 +8,7 @@ using User.Persistence.Repositories;
 using FluentValidation;
 using ToDoList.Contracts.Requests.User;
 using User.Core.Validations;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration; // Получение доступа к конфигурации
@@ -23,7 +24,24 @@ builder.Services.AddScoped<IValidator<PostUserRequest>, PostUserRequestValidator
 // Добавление профиля для автомаппера
 builder.Services.AddAutoMapper(opt => opt.AddProfile<UserProfile>());
 
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    return ConnectionMultiplexer.Connect(config.GetConnectionString("Redis"));
+});
+
 var app = builder.Build();
+
+app.Lifetime.ApplicationStarted.Register(async () =>
+{
+    var redis = app.Services.GetRequiredService<IConnectionMultiplexer>();
+    var db = redis.GetDatabase();
+
+    await db.StringSetAsync("test", "Hello from Redis via Rider");
+    var value = await db.StringGetAsync("test");
+
+    Console.WriteLine($"Redis ответил: {value}");
+});
 
 app.MapControllers(); // Машрутизация контроллеров
 app.UseSwagger(); // Включает middleware для генерации Swagger JSON
