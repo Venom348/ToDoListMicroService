@@ -37,11 +37,12 @@ public class TaskService : ITaskService
         // Если передан title - фильтруем по нему
         if (!string.IsNullOrWhiteSpace(title))
         {
+            // Получение данных из БД
             var result = await _taskRepository.GetAll()
                 .Where(x => x.Title.Contains(title))
                 .Skip(page * limit)
                 .Take(limit)
-                .ToListAsync(); // ✅ Сначала получаем данные из БД
+                .ToListAsync(); 
         
             // Если по названию задачи ничего не найдено - выбрасывает исключение
             if (result.Count == 0)

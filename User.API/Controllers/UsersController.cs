@@ -27,7 +27,6 @@ public class UsersController : ControllerBase
     {
         try
         {
-            //email = HttpContext.User.Claims.FirstOrDefault().Value;
             var response = await _userService.Get(email);
             return Ok(response);
         }
@@ -44,6 +43,17 @@ public class UsersController : ControllerBase
     [HttpPatch]
     public async Task<IActionResult> Update([FromBody] PatchUserRequest request)
     {
+        var validationResult = await _userValidator.ValidateAsync(request);
+
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors.Select(x => new
+            {
+                Property = x.PropertyName,
+                Errors = x.ErrorMessage
+            }));
+        }
+
         try
         {
             var response = await _userService.Update(request);

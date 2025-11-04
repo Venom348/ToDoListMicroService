@@ -3,6 +3,7 @@ using ToDoList.Contracts.Entities;
 
 namespace Auth.Persistence.Repositories;
 
+/// <inheritdoc cref="IBaseRepository{User}"/>
 public class AuthRepository : IBaseRepository<User>
 {
     private readonly ApplicationContext _dbContext;

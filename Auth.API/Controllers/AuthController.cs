@@ -37,7 +37,7 @@ public class AuthController : ControllerBase
         {
             return BadRequest(validationResult.Errors.Select(x => new
             {
-                Proprty = x.PropertyName,
+                Property = x.PropertyName,
                 Errors = x.ErrorMessage
             }));
         }

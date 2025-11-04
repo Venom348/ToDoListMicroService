@@ -15,13 +15,11 @@ builder.Services.AddControllers(); // Регистрирует сервисы д
 builder.Services.AddSwaggerGen(); // Генерация документации Swagger
 
 builder.Services.AddValidatorsFromAssembly(typeof(PostTaskRequestValidator).Assembly); // Регистрируем Validator
-
 builder.Services.AddTransient<ITaskService, TaskService>();
 builder.Services.AddDbContext<ApplicationContext>(opt => opt.UseNpgsql(configuration.GetConnectionString("Psql")));
 builder.Services.AddTransient<IBaseRepository<ToDoList.Contracts.Entities.Task>, TaskRepository>();
 
-// Добавление профиля для автомаппера
-builder.Services.AddAutoMapper(opt => opt.AddProfile<TaskProfile>());
+builder.Services.AddAutoMapper(opt => opt.AddProfile<TaskProfile>()); // Добавление профиля для автомаппера
 
 var app = builder.Build();
 

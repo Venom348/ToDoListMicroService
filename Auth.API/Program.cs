@@ -16,22 +16,25 @@ using StackExchange.Redis;
 using ToDoList.Contracts.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
-var configuration = builder.Configuration;
+var configuration = builder.Configuration; // Получение доступа к конфигурации
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(); // Регистрирует сервисы для работы с контроллерами
 
+// Генерация документации Swagger
 builder.Services.AddSwaggerGen(options =>
 {
+    // Определение схемы безопасности Bearer (JWT) для Swagger UI
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Введите JWT токен в формате: Bearer {ваш токен}"
+        Name = "Authorization", // Имя заголовка для токена
+        Type = SecuritySchemeType.Http, // Тип схемы безопасности
+        Scheme = "Bearer", // Схема аутентификации
+        BearerFormat = "JWT", // Формат токена
+        In = ParameterLocation.Header, // Токен передается в заголовке
+        Description = "Введите JWT токен в формате: {ваш токен}"
     });
-
+    
+    // Добавление требования безопасности для всех эндпоинтов в Swagger
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -40,67 +43,62 @@ builder.Services.AddSwaggerGen(options =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
+                    Id = "Bearer" // Ссылка на схему безопасности
                 }
             },
-            Array.Empty<string>()
+            Array.Empty<string>() // Пустой массив scopes (для JWT не требуются конкретные scope)
         }
     });
 });
 
-// ✅ Redis (сначала!)
+// Регистрация IConnectionMultiplexer как Singleton для повторного использования соединения
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
+    // Получение строки подключения из конфигурации и создание соединения с Redis
     return ConnectionMultiplexer.Connect(config.GetConnectionString("Redis"));
 });
 
-// ✅ TokenCacheService
-builder.Services.AddSingleton<ITokenCacheService, TokenCacheService>();
+builder.Services.AddSingleton<ITokenCacheService, TokenCacheService>(); // Регистрация сервиса кеширования токенов
 
-// JWT настройки
-builder.Services.Configure<AuthOption>(builder.Configuration.GetSection("JwtSettings"));
+builder.Services.Configure<AuthOption>(builder.Configuration.GetSection("JwtSettings")); // Подключение JWT настроек из секции конфигурации "JwtSettings"
+builder.Services.AddValidatorsFromAssembly(typeof(PostRegisterRequestValidator).Assembly); // Регистрируем Validator для регистрации
+builder.Services.AddValidatorsFromAssembly(typeof(PostLoginRequestValidator).Assembly); // Регистрируем Validator для авторизации
+builder.Services.AddAutoMapper(opt => opt.AddProfile<AuthProfile>()); // Добавление профиля для автомаппера
 
-// Validators
-builder.Services.AddValidatorsFromAssembly(typeof(PostRegisterRequestValidator).Assembly);
-
-// ✅ AutoMapper (ДОБАВЬТЕ!)
-builder.Services.AddAutoMapper(opt => opt.AddProfile<AuthProfile>());
-
-// Authentication & Authorization
+// Добавление поддержки авторизации
 builder.Services.AddAuthorization();
+// Настройка аутентификации с использованием JWT Bearer токенов
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        // Получение настроек JWT из конфигурации
         var serviceProvider = builder.Services.BuildServiceProvider();
         var authOptions = serviceProvider.GetRequiredService<IOptions<AuthOption>>().Value;
         
+        // Параметры валидации JWT токенов
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidIssuer = authOptions.Issuer,
-            ValidateAudience = true,
-            ValidAudience = authOptions.Audience,
-            ValidateLifetime = true,
-            IssuerSigningKey = authOptions.GetSymmetricSecurityKey(),
-            ValidateIssuerSigningKey = true,
+            ValidateIssuer = true, // Проверять издателя токена
+            ValidIssuer = authOptions.Issuer, // Ожидаемый издатель
+            ValidateAudience = true, // Проверять аудиторию токена
+            ValidAudience = authOptions.Audience, // Ожидаемая аудитория
+            ValidateLifetime = true, // Проверять срок действия токена
+            IssuerSigningKey = authOptions.GetSymmetricSecurityKey(), // Ключ для проверки подписи
+            ValidateIssuerSigningKey = true, // Проверять подпись токена
         };
     });
 
-// Сервисы
 builder.Services.AddTransient<IAuthService, AuthService>();
-builder.Services.AddDbContext<ApplicationContext>(opt => 
-    opt.UseNpgsql(configuration.GetConnectionString("Psql")));
+builder.Services.AddDbContext<ApplicationContext>(opt => opt.UseNpgsql(configuration.GetConnectionString("Psql")));
 builder.Services.AddTransient<IBaseRepository<User>, AuthRepository>();
 
 var app = builder.Build();
 
-app.MapControllers();
-app.UseSwagger();
-app.UseSwaggerUI();
-app.UseHttpsRedirection();
-
-// ✅ ВАЖНО: Добавьте эти middleware В ПРАВИЛЬНОМ ПОРЯДКЕ
+app.MapControllers(); // Маршрутизация контроллеров
+app.UseSwagger(); // Включает middleware для генерации Swagger JSON
+app.UseSwaggerUI(); // Включает веб-интерфейс для документации API
+app.UseHttpsRedirection(); // Перенаправляет HTTP запросы на HTTPS
 app.UseAuthentication(); // Сначала аутентификация
 app.UseAuthorization();  // Потом авторизация
 
