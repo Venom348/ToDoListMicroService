@@ -13,9 +13,10 @@
 ## Технологический стек
 - **Версия .NET:** .NET 8, .NET 9;
 - **Framework:** ASP.NET Core;
-- **База данных:** PostgreSQL;
+- **База данных:** PostgreSQL, Redis;
 - **ORM система:** Entity Framework Core;
 - **Язык запросов:** LINQ;
 - **API документация:** Swagger;
 - **Валидация:** FluentValidation;
 - **Маппинг:** AutoMapper;
+- **Кешированние:** Redis;
