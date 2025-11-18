@@ -8,6 +8,11 @@ namespace ToDoList.Contracts.Requests.Task;
 public class PostTaskRequest
 {
     /// <summary>
+    ///     Идентификатор пользователя
+    /// </summary>
+    public Guid UserId { get; set; }
+    
+    /// <summary>
     ///     Название задачи
     /// </summary>
     public string Title { get; set; }

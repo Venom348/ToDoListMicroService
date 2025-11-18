@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using Auth.Core.Abstractions.Services;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using ToDoList.Contracts.Requests.User;
@@ -15,33 +16,40 @@ namespace User.Core.Implemetations.Services;
 public class UserService : IUserService
 {
     private readonly IBaseRepository<ToDoList.Contracts.Entities.User> _userRepository;
-    private readonly IMapper  _mapper;
+    private readonly ITokenCacheService _tokenCache;
+    private readonly IMapper _mapper;
     
-    public UserService(IBaseRepository<ToDoList.Contracts.Entities.User> userRepository, IMapper mapper)
+    public UserService(IBaseRepository<ToDoList.Contracts.Entities.User> userRepository, ITokenCacheService tokenCache, IMapper mapper)
     {
         _userRepository = userRepository;
+        _tokenCache = tokenCache;
         _mapper = mapper;
     }
 
-    public async Task<List<UserDescriptionResponse>> Get(string email)
+    public async Task<UserDescriptionResponse> Get(string? email, Guid? id)
     {
-        // Проверка входных данных
-        if (string.IsNullOrWhiteSpace(email))
+        // Инициализация переменной для хранения найденного пользователя
+        ToDoList.Contracts.Entities.User? user = null;
+        
+        if (!string.IsNullOrWhiteSpace(email))
         {
-            throw new ArgumentException("Email не может быть пустым.", nameof(email));
+            // Поиск пользователя по Email
+            user = await _userRepository.GetAll().FirstOrDefaultAsync(x => x.Email == email);
+        }
+        else if (id.HasValue)
+        {
+            // Поиск пользователя по ID
+            user = await _userRepository.GetAll().FirstOrDefaultAsync(x => x.Id == id);
         }
         
-        // Поиск пользователя по Email
-        var result = await _userRepository.GetAll().FirstOrDefaultAsync(x => x.Email == email);
-        
-        // Если Email не найден, выбрасывает исключение
-        if (result is null)
+        // Если пользователь не найден, выбрасывает исключение
+        if (user is null)
         {
-            throw new UserException("Пользователь с таким Email не найден. Повторите попытку или зарегистрируйтесь.");
+            throw new UserException("Пользователь с таким Email или Id не найден. Повторите попытку или зарегистрируйтесь.");
         }
         
         // Возвращает пользователя в виде списка из одного элемента через маппинг
-        return new List<UserDescriptionResponse>([_mapper.Map<UserDescriptionResponse>(result)]);
+        return _mapper.Map<UserDescriptionResponse>(user);
     }
 
     public async Task<UserDescriptionResponse> Update(PatchUserRequest request)
@@ -85,6 +93,11 @@ public class UserService : IUserService
         
         // Возвращает информацию об удалённом пользователе через маппинг
         return _mapper.Map<UserResponse>(result);
+    }
+    
+    public async Task Logout(Guid id)
+    {
+        await _tokenCache.RevokeRefreshTokenAsync(id); // Удаление Refresh Token из Redis, делая его невалидным
     }
     
     /// <summary>

@@ -1,4 +1,5 @@
 ﻿using ToDoList.Contracts.Common;
+using ToDoList.Contracts.Entities;
 
 namespace Task.Core.Abstractions.Repositories;
 
@@ -11,7 +12,7 @@ public interface IBaseRepository<TEntity> where TEntity : Entity
     ///     Получаем запрос для entity
     /// </summary>
     IQueryable<TEntity> GetAll();
-    
+
     /// <summary>
     ///     Получаем сущность по ID
     /// </summary>

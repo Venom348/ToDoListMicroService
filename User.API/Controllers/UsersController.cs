@@ -1,4 +1,6 @@
-﻿using FluentValidation;
+﻿using System.Security.Claims;
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Contracts.Requests.User;
 using User.Core.Abstractions.Services;
@@ -23,11 +25,11 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get(string email)
+    public async Task<IActionResult> Get(string? email, Guid? id)
     {
         try
         {
-            var response = await _userService.Get(email);
+            var response = await _userService.Get(email, id);
             return Ok(response);
         }
         catch (UserException ex)
@@ -84,6 +86,28 @@ public class UsersController : ControllerBase
         catch (Exception)
         {
             return BadRequest("Неизвестная ошибка");
+        }
+    }
+    
+    [Authorize]
+    [HttpPost("Logout")]
+    public async Task<IActionResult> Logout(Guid id)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { Error = "Недействительный токен" });
+            }
+
+            await _userService.Logout(userId);
+            return Ok(new { Message = "Выход выполнен успешно" });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { Error = "Неизвестная ошибка" });
         }
     }
 }

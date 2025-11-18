@@ -29,11 +29,4 @@ public interface IAuthService
     /// <param name="id">Идентификатор пользователя</param>
     /// <returns></returns>
     Task<PostLoginResponse> RefreshToken(RefreshTokenRequest request, Guid id);
-    
-    /// <summary>
-    ///     Выход пользователя из системы (инвалидация токенов)
-    /// </summary>
-    /// <param name="id">Идентификатор пользователя</param>
-    /// <returns></returns>
-    Task Logout(Guid id);
 }

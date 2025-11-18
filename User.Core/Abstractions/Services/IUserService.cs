@@ -13,8 +13,9 @@ public interface IUserService
     ///     Получение пользователя из БД
     /// </summary>
     /// <param name="email">Email пользователя</param>
+    /// <param name="id"></param>
     /// <returns></returns>
-    Task<List<UserDescriptionResponse>> Get(string email);
+    Task<UserDescriptionResponse> Get(string email, Guid? id);
     
     /// <summary>
     ///     Обновление данных пользователя
@@ -29,4 +30,11 @@ public interface IUserService
     /// <param name="id">Идентификатор пользователя</param>
     /// <returns></returns>
     Task<UserResponse> Delete(Guid id);
+    
+    /// <summary>
+    ///     Выход пользователя из системы (инвалидация токенов)
+    /// </summary>
+    /// <param name="id">Идентификатор пользователя</param>
+    /// <returns></returns>
+    Task Logout(Guid id);
 }

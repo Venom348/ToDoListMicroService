@@ -6,7 +6,6 @@ namespace Auth.Core.Implementations.Services;
 /// <inheritdoc cref="ITokenCacheService"/>
 public class TokenCacheService : ITokenCacheService
 {
-    private readonly IConnectionMultiplexer _redis;
     private readonly IDatabase _db;
 
     public TokenCacheService(IConnectionMultiplexer redis)

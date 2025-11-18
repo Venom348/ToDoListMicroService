@@ -1,11 +1,14 @@
-﻿using AutoMapper;
+﻿using System.Net.Http.Json;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Task.Core.Abstractions.Repositories;
 using Task.Core.Abstractions.Services;
 using Task.Core.Exceptions;
+using ToDoList.Contracts.Entities;
 using ToDoList.Contracts.Requests.Task;
 using ToDoList.Contracts.Responses;
 using ToDoList.Contracts.Responses.Task;
+using ToDoList.Contracts.Responses.User;
 
 namespace Task.Core.Implementations.Services;
 
@@ -13,12 +16,16 @@ namespace Task.Core.Implementations.Services;
 public class TaskService : ITaskService
 {
     private readonly IBaseRepository<ToDoList.Contracts.Entities.Task>  _taskRepository;
+    private readonly IBaseRepository<UserTask> _userTaskRepository; // Репозиторий для работы со связью пользователей и задач
+    private readonly HttpClient _userHttpClient; // HTTP клиент для взаимодействия с User API
     private readonly IMapper _mapper;
 
-    public TaskService(IBaseRepository<ToDoList.Contracts.Entities.Task> taskRepository, IMapper mapper)
+    public TaskService(IBaseRepository<ToDoList.Contracts.Entities.Task> taskRepository, IMapper mapper, IBaseRepository<UserTask> userTaskRepository, IHttpClientFactory httpClientFactory)
     {
         _taskRepository = taskRepository;
         _mapper = mapper;
+        _userTaskRepository = userTaskRepository;
+        _userHttpClient = httpClientFactory.CreateClient("UserAPI");
     }
 
     public async Task<List<TaskDescriptionResponse>> Get(string? title, int page = 0, int limit = 20)
@@ -72,6 +79,22 @@ public class TaskService : ITaskService
 
     public async Task<TaskDescriptionResponse> Create(PostTaskRequest request)
     {
+        // Проверка существования пользователя в БД
+        Guid? userId = await _userTaskRepository.GetAll().Select(s => s.UserId)
+            .FirstOrDefaultAsync(x => x == request.UserId);
+        
+        // Если пользователь не найден, получаем его из User API
+        if (!userId.HasValue)
+        {
+            // Получаем пользователя из User API для валидации его существования
+            var response = await _userHttpClient.GetFromJsonAsync<UserDescriptionResponse>($"users?id={request.UserId.ToString()}");
+            
+            if (response != null)
+            {
+                userId = response.Id;
+            }
+        }
+        
         // Создание задачи с переданными данными
         var result = await _taskRepository.Create(new ToDoList.Contracts.Entities.Task
         {
@@ -79,6 +102,13 @@ public class TaskService : ITaskService
             Description = request.Description,
             Status = request.Status,
             Priority = request.Priority
+        });
+        
+        // Создание связи между пользователем и задачей
+        await _userTaskRepository.Create(new UserTask
+        {
+            UserId = userId.Value,
+            Task = result
         });
         
         // Возвращает информацию о созданной задачи

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ToDoList.Contracts.Entities;
 
 namespace Task.Persistence;
 
@@ -9,6 +10,7 @@ public class ApplicationContext : DbContext
 {
     // Определение сущности
     public DbSet<ToDoList.Contracts.Entities.Task> Tasks => Set<ToDoList.Contracts.Entities.Task>();
+    public DbSet<UserTask> UserTasks => Set<UserTask>();
 
     public ApplicationContext(DbContextOptions<ApplicationContext> options): base(options)
     {
@@ -20,7 +22,12 @@ public class ApplicationContext : DbContext
             Init();
         }
     }
-    
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationContext).Assembly);
+    }
+
     private void Init()
     {
         SaveChanges();

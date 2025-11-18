@@ -110,26 +110,4 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { Error = "Неизвестная ошибка" });
         }
     }
-
-    [Authorize]
-    [HttpPost("Logout")]
-    public async Task<IActionResult> Logout(Guid id)
-    {
-        try
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-            {
-                return Unauthorized(new { Error = "Недействительный токен" });
-            }
-
-            await _authService.Logout(userId);
-            return Ok(new { Message = "Выход выполнен успешно" });
-        }
-        catch (Exception)
-        {
-            return StatusCode(500, new { Error = "Неизвестная ошибка" });
-        }
-    }
 }

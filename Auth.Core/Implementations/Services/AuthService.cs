@@ -143,12 +143,7 @@ public class AuthService : IAuthService
             User = _mapper.Map<UserDescriptionResponse>(result), 
         };
     }
-
-    public async Task Logout(Guid id)
-    {
-        await _tokenCache.RevokeRefreshTokenAsync(id); // Удаление Refresh Token из Redis, делая его невалидным
-    }
-
+    
     // Генерация Access Token (JWT)
     private string GenerateAccessToken(User user)
     {
